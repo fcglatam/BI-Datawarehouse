@@ -1,3 +1,7 @@
 .env
 _credentials.json
 _token.json
+.spyproject
+dv_1_inventory_versiones_nosirve.py
+eg_revisions.py
+eg_quickstart.py

@@ -1,6 +1,7 @@
 .env
 _credentials.json
 _token.json
+*__pycache__
 .spyproject
 dv_1_inventory_versiones_nosirve.py
 eg_revisions.py

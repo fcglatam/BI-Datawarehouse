@@ -72,22 +72,22 @@ def convert_inventory(inventory_in, when) :
     "internal_id"     : lambda df: "MX-" + df.internal_car_id.astype(str),
     "vehicle_id"      : lambda df: df.car_vin.str.replace(" .*", ""), 
     "car_name"        : lambda df: df.car_manufacturer_name.str.\
-        cat(df.car_model_name.str.\
-        cat(df.year_manufactured.astype(str), sep = " - "), sep = " - "), 
+        cat(sep = " - ", others = df.car_model_name.str.\
+        cat(sep = " - ", others = df.year_manufactured.astype(str) ) ), 
     "car_cost"        : lambda df: np.where(df.client_subtype == "person", 
         df.car_purchase_price_car, df.car_purchase_price_car/1.16),
-    "allowance_cost"  : lambda df: df.allowance_sum,
+    "allowance_cost"  : lambda df: df.allowance_sum.fillna(0),
     "total_cost"      : lambda df: np.where(df.client_subtype == "person", 
         df.car_purchase_price_total, df.car_purchase_price_total) ,
     "incoming_date"   : lambda df: df.car_handedover_from_seller.dt.date, 
     "inventory_days"  : lambda df: (when - df.car_handedover_from_seller).dt.days,
-    "status_days"     : lambda df: (when - df.car_handedover_from_seller).dt.days, ####
+    "status_days"     : lambda df: (when - df.car_handedover_from_seller).dt.days, 
     "created_at"      : lambda df: dt.now(),
     "updated_at"      : lambda df: dt.now(),
     }
 
   inventory_out = inventory_in.assign(**cols_compute).\
-    loc[:, list(cols_compute.keys()) ].\
+    loc[:, tuple(cols_compute.keys()) ].\
     fillna({"allowance_cost" : 0})
   return inventory_out
 

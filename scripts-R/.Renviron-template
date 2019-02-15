@@ -1,0 +1,8 @@
+DB_SERVER=
+DB_NAME=
+DB_USER=readonlylogin
+DB_PASSWORD=
+DB_DRIVER="ODBC Driver ## for SQL Server"
+G_EXPORT_LABEL="carpeta de Google"
+G_USERNAME="user@fcglatam.com"
+RETICULATE_PYTHON="C:/Users/.../Anaconda3/pythonw.exe"

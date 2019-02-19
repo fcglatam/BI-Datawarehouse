@@ -61,10 +61,10 @@ def get_inventory(engine, metadata):
   
 
 
-def convert_inventory(inventory_in, when) : 
+def convert_inventory(inventory_in, for_day): 
   
   cols_compute = {
-    "inventory_date"  : lambda df: when,
+    "inventory_date"  : lambda df: for_day,
     "car_id"          : lambda df: df.car_id,
     "selling_status"  : lambda df: df.car_selling_status, 
     "physical_status" : lambda df: df.car_physical_status, 
@@ -80,8 +80,8 @@ def convert_inventory(inventory_in, when) :
     "total_cost"      : lambda df: np.where(df.client_subtype == "person", 
         df.car_purchase_price_total, df.car_purchase_price_total) ,
     "incoming_date"   : lambda df: df.car_handedover_from_seller.dt.date, 
-    "inventory_days"  : lambda df: (when - df.car_handedover_from_seller).dt.days,
-    "status_days"     : lambda df: (when - df.car_handedover_from_seller).dt.days, 
+    "inventory_days"  : lambda df: (for_day - df.car_handedover_from_seller).dt.days,
+    "status_days"     : lambda df: (for_day - df.car_handedover_from_seller).dt.days, 
     "created_at"      : lambda df: dt.now(),
     "updated_at"      : lambda df: dt.now(),
     }

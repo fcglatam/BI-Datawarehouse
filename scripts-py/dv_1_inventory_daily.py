@@ -20,13 +20,13 @@ from tools.base import local_engine, reflect_engine
 
 #%% 1. Procedimiento digerido. 
 
-for_day = dt.today() - delta(1)
+yesterday = dt.today() - delta(1)
 
 engine_ms = local_engine("mssql")
 meta_ms = reflect_engine(engine_ms, update = False)
 
 inventory_ms = ms.get_inventory(engine_ms, meta_ms)
-inventory_pg = ms.convert_inventory(inventory_ms, when = for_day)
+inventory_pg = ms.convert_inventory(inventory_ms, for_day = yesterday)
 
 engine_pg = local_engine("postgresql")
 inventory_pg.to_sql("xinventoryDaily", con = engine_pg, 

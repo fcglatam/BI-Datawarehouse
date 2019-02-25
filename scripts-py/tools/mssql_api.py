@@ -36,7 +36,7 @@ def get_inventory(engine, metadata):
       allows_sub.c.allowance_sum ]
   
   statuses = {
-      "selling"  : ['AVAILABLE','RESERVED','NOTAVAILABLE',
+      "selling"  :   ['AVAILABLE','RESERVED','NOTAVAILABLE',
                     'PENDINGCLEARANCE','CONFIRMED','CONSIGNED'], 
       "physical" : ["INTRANSIT", "ATOURLOCATION"] }
   
@@ -71,7 +71,7 @@ def convert_inventory(inventory_in, for_day):
     "legal_status"    : lambda df: df.car_legal_status,
     "internal_id"     : lambda df: "MX-" + df.internal_car_id.astype(str),
     "vehicle_id"      : lambda df: df.car_vin.str.replace(" .*", ""), 
-    "car_location"    : lambda df: df.car_purchase_location,
+    "car_location"    : lambda df: df.car_purchase_location, 
     "car_name"        : lambda df: df.car_manufacturer_name.str.\
         cat(sep = " - ", others = df.car_model_name.str.\
         cat(sep = " - ", others = df.year_manufactured.astype(str) ) ), 

@@ -14,12 +14,16 @@ Created on Tue Jan 15 18:28:10 2019
 #    4.1 Cache lista de días subidos. 
 #    4.2 Descargar, test de descarga, subir. 
 
+import os 
+
 
 #%% 0. Preparación: input y paquetes. 
 
 nombre_folder = "Inventario"
-google_creds  = {"token"       : "_token.json", 
-                 "credentials" : "_credentials.json"}
+creds_folder  = f"../data/config"
+google_creds  = {
+    "token"       : os.path.join(creds_folder, "_token.json"), 
+    "credentials" : os.path.join(creds_folder, "_credentials.json") }
 
 import os 
 import pandas as pd

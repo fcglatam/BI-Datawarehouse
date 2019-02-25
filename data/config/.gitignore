@@ -1,6 +1,7 @@
 *
 !*.gitignore
 !.env_template
+!requirements.txt
 !readme.md
 !requirements.txt
 !models

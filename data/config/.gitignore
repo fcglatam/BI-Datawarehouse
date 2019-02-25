@@ -2,4 +2,5 @@
 !*.gitignore
 !.env_template
 !readme.md
-
+!requirements.txt
+!models

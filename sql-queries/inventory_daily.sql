@@ -1,6 +1,6 @@
-CREATE TABLE xinventoryDaily (
+CREATE TABLE xxinventoryDaily (
     inventory_date  DATE         NOT NULL,
-    car_id          VARCHAR (16) NOT NULL,
+    car_id          VARCHAR (40) NOT NULL,
     selling_status  VARCHAR (32), 
     physical_status VARCHAR (32), 
     legal_status    VARCHAR (32), 

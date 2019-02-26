@@ -64,7 +64,7 @@ def get_inventory(engine, metadata):
 def convert_inventory(inventory_in, for_day): 
   
   cols_compute = {
-    "inventory_date"  : lambda df: for_day,
+    "inventory_date"  : lambda df: for_day.date(),
     "car_id"          : lambda df: df.car_id,
     "selling_status"  : lambda df: df.car_selling_status, 
     "physical_status" : lambda df: df.car_physical_status, 

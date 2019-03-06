@@ -9,7 +9,7 @@ Created on Tue Jan 15 18:28:10 2019
 # 0. Preparación.
 # 1. Conectar Google.
 # 2. Enlistar archivos de inventarios.
-# 3. Descargar datos y revisar. 
+# 3. Descargar datos 
 # 4. Conectar PSQL y subir datos.   
 #    4.1 Cache lista de días subidos. 
 #    4.2 Descargar, test de descarga, subir. 
@@ -34,7 +34,6 @@ from sqlalchemy import create_engine
 from dotenv import load_dotenv
 from itertools import islice
 from csv import QUOTE_ALL
-
 load_dotenv("../data/config/.env")
 
 # Una funcioncita. 
@@ -56,7 +55,7 @@ servicio_drive = build('drive',  'v3', http=creds.authorize(Http()))
 servicio_sheet = build('sheets', 'v4', http=creds.authorize(Http()))
 
 
-#%% 3. Archivos de inventario     
+#%% 2. Archivos de inventario     
 
 busqueda_0 = servicio_drive.files().\
     list(q = f"name = '{nombre_folder}'").execute()
@@ -83,7 +82,7 @@ archivos_df = archivos_df.assign(
         format = "%y%m%d") ) 
 
 
-#%% 4. Archivos:  descargar, verificar y subir a la base. 
+#%% 3. Descargar datos 
     
 tipos_columnas = [("inventory_date", "datetime64"),  ("car_id", object),
     ("selling_status", object), ("physical_status", object), 
@@ -137,8 +136,7 @@ for i, cada_fila in archivos_df.iterrows():
             
     inventario_df = inventario_df.append( cada_inventario, sort = False)
 
-#%%
-    
+
 inventario_df_ok = inventario_df.assign(
         car_id   = inventario_df.internal_id, 
         car_name = inventario_df.Marca.str.cat(  
@@ -163,9 +161,7 @@ inventario_df_ok.to_csv(csv_file, index = False, na_rep = "")
 
 
 
-#%% Subir a la base. 
-
-#inventario_df_ok = pd.read_csv("../data/history/inventory_backup.csv")
+#%% 4. Conectar POSTGRES y subir tabla. 
 
 el_host = getenv("PG_HOST")
 el_user = getenv("PG_USER")

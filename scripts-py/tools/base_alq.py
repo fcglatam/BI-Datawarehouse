@@ -23,10 +23,10 @@ def local_engine(which_base):
   elif which_base == "postgresql":
     engine = alq.create_engine(
       'postgresql://{user}:{pswd}@{host}/{name}'.format(
-          user   = os.getenv("PG_USER"), 
-          pswd  = os.getenv("PG_PASS"), 
-          host   = os.getenv("PG_HOST"), 
-          name   = os.getenv("PG_NAME") ))  
+          user = os.getenv("PG_USER"), 
+          pswd = os.getenv("PG_PASS"), 
+          host = os.getenv("PG_HOST"), 
+          name = os.getenv("PG_NAME") ))  
   engine.logging_name = which_base
   return engine
 
@@ -38,16 +38,18 @@ def begin_session(engine):
 
 def reflect_engine(engine, update=True, store=None):
   if store is None: 
-    store = f'../data/config/meta_{engine.logging_name}.pkl'
+    store = f'../data/config/cache/meta_{engine.logging_name}.pkl'
   
   if update or not os.path.isfile(store):
     meta = alq.MetaData()
-    meta.reflect(engine)
+    meta.reflect(bind=engine)
     with open(store, "wb") as opened:
       pkl.dump(meta, opened)
   else: 
-    meta = pkl.load(store)
+    with open(store, "rb") as opened:
+      meta = pkl.load(opened)
   return meta
+
 
 
 def upload_sql(df, table, engine, schema="public", method=4): 

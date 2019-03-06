@@ -14,18 +14,16 @@ Created on Tue Jan 15 18:28:10 2019
 #    4.1 Cache lista de días subidos. 
 #    4.2 Descargar, test de descarga, subir. 
 
-import os 
-
 
 #%% 0. Preparación: input y paquetes. 
 
+from os import path, getenv
 nombre_folder = "Inventario"
-creds_folder  = f"../data/config"
+creds_folder  = path.join("..", "data", "config")
 google_creds  = {
-    "token"       : os.path.join(creds_folder, "_token.json"), 
-    "credentials" : os.path.join(creds_folder, "_credentials.json") }
+    "token"       : path.join(creds_folder, "drive_token.json"), 
+    "credentials" : path.join(creds_folder, "drive_credentials.json")}
 
-import os 
 import pandas as pd
 from __future__ import print_function
 from googleapiclient.discovery import build
@@ -37,7 +35,7 @@ from dotenv import load_dotenv
 from itertools import islice
 from csv import QUOTE_ALL
 
-load_dotenv(".env")
+load_dotenv("../data/config/.env")
 
 # Una funcioncita. 
 currency_str = lambda str_series: pd.to_numeric(str_series.str.replace("[$,]", ""))
@@ -164,44 +162,21 @@ csv_file = "../data/history/{}_{}_inventory.csv".format(
 inventario_df_ok.to_csv(csv_file, index = False, na_rep = "")
 
 
+
 #%% Subir a la base. 
 
 #inventario_df_ok = pd.read_csv("../data/history/inventory_backup.csv")
 
-el_host = os.getenv("DB_HOST")
-el_user = os.getenv("DB_USER")
-la_base = os.getenv("DB_NAME")
-el_pass = os.getenv("DB_PASS")
+el_host = getenv("PG_HOST")
+el_user = getenv("PG_USER")
+la_base = getenv("PG_NAME")
+el_pass = getenv("PG_PASS")
 
 engine = create_engine(
     f'postgresql+psycopg2://{el_user}:{el_pass}@{el_host}/{la_base}')
 
-
-#%%
-
-conexion = psql.connect(
-    host = el_host, user = el_user, dbname = la_base, password = el_pass)
-
-
-#%%
-
-conexion = engine.connect().connection
-cursor   = conexion.cursor()
-
-#conexion.rollback()
-with open(csv_backup) as data_f:
-    next(data_f)  # Para brincarse los headers. 
-    cursor.copy_from(data_f, '"xinventoryDaily"', 
-        columns = [columna for (columna, tipo) in tipos_columnas], 
-        sep = ",", null = "")
-
-conexion.close()
-
-
-#%%
-
-
-
+inventario_df_ok.to_sql("cars_inventory", con = engine, schema = "public",
+    if_exists = "append", index = False)
 
 
 

@@ -1,0 +1,6 @@
+cron: 
+- description: "daily update"
+  url: /scripts-py/dv_1_inventory_daily
+  target: beta
+  schedule: every day 23:00 
+  timezone: MexicoCity

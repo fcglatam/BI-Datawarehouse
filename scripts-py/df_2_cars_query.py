@@ -34,10 +34,13 @@ from tools.base_alq import local_engine, reflect_engine
 
 
 engine_ms = local_engine("mssql")
-meta_ms   = reflect_engine(engine_ms, update=False)
+meta_ms = reflect_engine(engine_ms, update=False)
 
+cars_df = ms.get_cars(engine_ms, this_dir)
 
-
+engine_pg = local_engine("postgresql")
+cars_df.to_sql("x_dwh_cars", con=engine_pg, 
+    schema="public", if_exists="append", index=False)
 
 
 

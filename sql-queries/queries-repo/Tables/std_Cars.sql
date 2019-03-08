@@ -223,13 +223,13 @@ SELECT Cars.[car_id]
           0.5*(CAST(SUBSTRING([initial_valuation_price], CHARINDEX('-',initial_valuation_price) + 1, 
           LEN(initial_valuation_price) - CHARINDEX('-',initial_valuation_price)) AS float))
     ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-      initial_valuation_price
-          ,' ',''),
-          '$',''),
-          ',', ''),
+      initial_valuation_price,
+          ' '  , ''),
+          '$'  , ''),
+          ','  , ''),
           '.00', ''),
-          '.', ''),
-          'O', '0')
+          '.'  , ''),
+          'O'  , '0')
   END AS initial_valuation_price 
 , 'MX-' + CAST([internal_car_id] AS VARCHAR) as internal_car_id
 , CDT.car_purchased_date

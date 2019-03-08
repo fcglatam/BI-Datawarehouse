@@ -1,4 +1,5 @@
 import os
+from os import path, pardir
 import sqlalchemy as alq
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.serializer import loads, dumps

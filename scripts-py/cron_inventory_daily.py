@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Feb  7 17:23:26 2019
-@author: Diego, basado en script de Quique. 
+@author: Diego, 
 """
+
+#%% Interactive: Set Autoreload, Non-Interactive: pseudo activate env. 
 
 import __main__ as main
 from os import getcwd, path, pardir
@@ -23,7 +25,7 @@ else:
 
 from tools import mssql_api as ms
 from datetime import datetime as dt, timedelta as delta
-from tools.base import local_engine, reflect_engine
+from tools.base_alq import local_engine, reflect_engine
 
 
 #%% 1. Procedimiento digerido. 
@@ -31,19 +33,33 @@ from tools.base import local_engine, reflect_engine
 which_day = dt.today() # - delta(1)
 
 engine_ms = local_engine("mssql")
-meta_ms = reflect_engine(engine_ms, update = False)
+meta_ms   = reflect_engine(engine_ms, update=False)
 
 inventory_ms = ms.get_inventory(engine_ms, meta_ms)
-inventory_pg = ms.convert_inventory(inventory_ms, for_day = which_day)
+inventory_pg = ms.convert_inventory(inventory_ms, for_day=which_day)
 
 engine_pg = local_engine("postgresql")
-inventory_pg.to_sql("cars_inventory", con = engine_pg, schema = "public",
-   if_exists = "append", index = False)
+inventory_pg.to_sql("cars_inventory", con=engine_pg, 
+    schema="public", if_exists="append", index=False)
 
-out_file = path.join(this_dir, pardir, "data", "history", 
-    "{}_inventory.csv".format(which_day.strftime("%y%m%d")) )
 
-inventory_pg.to_csv(out_file, index = False) 
+
+
+
+
+7
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

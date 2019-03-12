@@ -64,8 +64,8 @@ CREATE TABLE x_dwh_cars (
   car_transmission            VARCHAR (256),
   car_color                   VARCHAR (256), 
   car_vin                     VARCHAR (256),
-  car_license_plate           VARCHAR (20),
-  car_engine_number           VARCHAR (20),
+  car_license_plate           VARCHAR (256),
+  car_engine_number           VARCHAR (256),
   car_selling_status          VARCHAR (256), 
   car_physical_status         VARCHAR (256),
   car_legal_status            VARCHAR (256),
@@ -122,5 +122,6 @@ CREATE TABLE x_dwh_cars (
   b2b_deal                    VARCHAR (256),
   deleted_at                  TIMESTAMP,
   inspection_qc_score         FLOAT,
-  inspector                   VARCHAR (256)
+  inspector                   VARCHAR (256), 
+  updated_at                  TIMESTAMP
 );

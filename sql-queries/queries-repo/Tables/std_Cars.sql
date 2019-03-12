@@ -1,24 +1,30 @@
 ﻿WITH
 -- Unir el QC score con car_id y nombre de inspectio
-qc_score AS (
-  SELECT SIN_DUPLICADOS.car_id
-  , OG_ID.inspection_qc_score
-  , CASE WHEN inspector IS NULL THEN 'Desconocido' 
-    ELSE UPPER(LEFT(inspector,1))
-      + SUBSTRING(inspector,2,CHARINDEX('.',inspector)-2) +' '
-      + UPPER(LEFT(SUBSTRING(inspector,CHARINDEX('.',inspector)+1, LEN(inspector)-CHARINDEX('.',inspector)),1))
-      + SUBSTRING(inspector, CHARINDEX('.', inspector)+2,CHARINDEX('@', inspector) - CHARINDEX('.',inspector)-2) END AS inspector
-  FROM Inspections
-  LEFT JOIN (SELECT original_inspection_id
-      , inspection_qc_score
-      FROM Inspections) OG_ID
-    ON Inspections.inspection_id = OG_ID.original_inspection_id
-
-  --Para quitar los car_id repetidos en Inspections (los hace null) y se queda con el que es mas reciente
-  LEFT JOIN (SELECT car_id, MAX(inspection_date) AS inspection_date FROM Inspections
-                WHERE car_id IS NOT NULL
-                GROUP BY car_id) AS SIN_DUPLICADOS
-ON (SIN_DUPLICADOS.car_id = Inspections.car_id AND SIN_DUPLICADOS.inspection_date = Inspections.inspection_date)
+QCScore AS (
+SELECT MXDT.car_id
+, OG_ID.inspection_qc_score
+, CASE WHEN inspector IS NULL THEN 'Desconocido' 
+  ELSE UPPER(LEFT(inspector, 1))
+    + SUBSTRING(inspector, 2, CHARINDEX('.', inspector) - 2) + ' '
+    + UPPER(LEFT(SUBSTRING(inspector, 
+        CHARINDEX('.', inspector) + 1, 
+        LEN(inspector) - CHARINDEX('.', inspector)), 1))
+    + SUBSTRING(inspector, 
+        CHARINDEX('.', inspector) + 2, 
+        CHARINDEX('@', inspector) - CHARINDEX('.',inspector) - 2) END AS inspector
+FROM Inspections INSP
+LEFT JOIN (SELECT original_inspection_id
+  , inspection_qc_score
+  FROM Inspections) OG_ID
+  ON INSP.inspection_id = OG_ID.original_inspection_id
+LEFT JOIN (
+      SELECT car_id
+      , MAX(inspection_date) AS inspection_date 
+      FROM Inspections 
+      WHERE car_id IS NOT NULL 
+      GROUP BY car_id) MXDT
+  ON MXDT.car_id = INSP.car_id 
+  AND MXDT.inspection_date = INSP.inspection_date
 )
 
 , LastWinnerAuction AS (
@@ -30,7 +36,7 @@ ON (SIN_DUPLICADOS.car_id = Inspections.car_id AND SIN_DUPLICADOS.inspection_dat
   , auction_buy_now_price
   FROM (SELECT auction_id
       , car_id 
-      , auction_start_date
+      , auction_start_date 
       , auction_end_date
       , auction_buy_now_price 
       , auction_start_price
@@ -46,17 +52,17 @@ ON (SIN_DUPLICADOS.car_id = Inspections.car_id AND SIN_DUPLICADOS.inspection_dat
 )
 
 , SalesChannel_Mod AS (
-  SELECT Cars.car_id 
+SELECT Cars.car_id 
   , CASE WHEN auction_buy_now_price = auction_start_price
       THEN 'YardsaleBuyNow' ELSE Cars.sales_channel 
-      END AS sales_channel
+    END AS sales_channel
   FROM Cars 
   LEFT JOIN LastWinnerAuction WIN 
     ON Cars.car_id = WIN.car_id
 )
 
 , CarAllowances_Grp AS (
-  SELECT car_id
+SELECT car_id
   , SUM(allowance_sum) AS car_allowance 
   FROM [CarAllowances] 
   GROUP BY car_id
@@ -64,40 +70,40 @@ ON (SIN_DUPLICADOS.car_id = Inspections.car_id AND SIN_DUPLICADOS.inspection_dat
 
 -- SUBTYPE_0, SUBTYPE_1, TAXLESS_2 se usan en la tabla final, pero también se usan en tablas posteriores. 
 , CarsSubtype_0 AS (
-  SELECT car_id
-    , source_car_id
-    , car_selling_price_total
-    , COALESCE(CASE WHEN client_subtype = '' THEN NULL ELSE client_subtype END,
-          CASE WHEN purchase_channel = 'B2B' THEN 'business' ELSE NULL END) AS client_subtype
-    FROM Cars
+SELECT car_id
+  , source_car_id
+  , car_selling_price_total
+  , COALESCE(CASE WHEN client_subtype = '' THEN NULL ELSE client_subtype END,
+        CASE WHEN purchase_channel = 'B2B' THEN 'business' ELSE NULL END) AS client_subtype
+  FROM Cars
 )
 
 , CarsSources_1 AS (
-  SELECT C0.car_id
-    , COALESCE(C0.client_subtype, C1.client_subtype, C2.client_subtype) AS client_subtype 
-    , COALESCE(C1.car_selling_price_total, C2.car_selling_price_total) AS source_car_selling_price_total
-    FROM CarsSubtype_0 C0
-    LEFT JOIN CarsSubtype_0 C1 
-      ON C0.source_car_id = C1.car_id 
-    LEFT JOIN CarsSubtype_0 C2 
-      ON C1.source_car_id = C2.car_id
+SELECT C0.car_id
+  , COALESCE(C0.client_subtype, C1.client_subtype, C2.client_subtype) AS client_subtype 
+  , COALESCE(C1.car_selling_price_total, C2.car_selling_price_total) AS source_car_selling_price_total
+  FROM CarsSubtype_0 C0
+  LEFT JOIN CarsSubtype_0 C1 
+    ON C0.source_car_id = C1.car_id 
+  LEFT JOIN CarsSubtype_0 C2 
+    ON C1.source_car_id = C2.car_id
 )
 
 , CarsTaxless_2 AS (
-  SELECT Cars.car_id
-    , SUB.client_subtype
-    , CASE WHEN SUB.[client_subtype] = 'person' THEN car_purchase_price_car 
-        WHEN SUB.[client_subtype] IS NOT NULL THEN car_purchase_price_car/1.16 
-        ELSE NULL END AS car_purchase_price_car_taxless
-    , CASE WHEN SUB.[client_subtype] = 'person'
-        THEN (car_selling_price_car +  -- MIN(car_purchase_price_car, car_selling_price_car)
-            0.16*(CASE WHEN car_purchase_price_car <= car_selling_price_car
-            THEN car_purchase_price_car ELSE car_selling_price_car END))/1.16
-        WHEN SUB.[client_subtype] IS NOT NULL THEN car_selling_price_car/1.16
-        ELSE NULL END AS car_selling_price_car_taxless
-    FROM Cars
-    LEFT JOIN CarsSources_1 SUB
-      ON Cars.car_id = SUB.car_id
+SELECT Cars.car_id
+  , SUB.client_subtype
+  , CASE WHEN SUB.[client_subtype] = 'person' THEN car_purchase_price_car 
+      WHEN SUB.[client_subtype] IS NOT NULL THEN car_purchase_price_car/1.16 
+      ELSE NULL END AS car_purchase_price_car_taxless
+  , CASE WHEN SUB.[client_subtype] = 'person'
+      THEN (car_selling_price_car +  -- MIN(car_purchase_price_car, car_selling_price_car)
+          0.16*(CASE WHEN car_purchase_price_car <= car_selling_price_car
+          THEN car_purchase_price_car ELSE car_selling_price_car END))/1.16
+      WHEN SUB.[client_subtype] IS NOT NULL THEN car_selling_price_car/1.16
+      ELSE NULL END AS car_selling_price_car_taxless
+  FROM Cars
+  LEFT JOIN CarsSources_1 SUB
+    ON Cars.car_id = SUB.car_id
 )
 
 , CarsTaxless_3 AS (
@@ -122,12 +128,10 @@ ON (SIN_DUPLICADOS.car_id = Inspections.car_id AND SIN_DUPLICADOS.inspection_dat
   , CAST(DATEADD(HOUR, 1, car_purchased_date)
       AS DATE) AS car_purchased_date
   , CAST(DATEADD(HOUR, 1, [car_handedover_from_seller])
-       AS DATE) AS car_handedover_from_seller  
-  -- Esta línea es importante------------
-  , CAST(DATEADD(HOUR, 1,
+      AS DATE) AS car_handedover_from_seller  
+  , CAST(DATEADD(HOUR, 1,   -- Esta línea es importante------------
       COALESCE(auction_last_date, car_sold_date)) 
       AS DATE) AS reserved_at_date
-  ---------------------------------------
   , reserved_at_date AS original_reserved_at_date
   , CAST(DATEADD(HOUR, 1, [car_handedover_to_buyer]) 
       AS DATE) AS car_handedover_to_buyer
@@ -142,7 +146,7 @@ ON (SIN_DUPLICADOS.car_id = Inspections.car_id AND SIN_DUPLICADOS.inspection_dat
       AND car_selling_status IN ('SOLD', 'RETURNED', 'CONSIGNED', 'CONFIRMED')
       THEN 1 ELSE 0 END AS sold_confirmed
   , CASE WHEN CDT.original_reserved_at_date IS NOT NULL 
-      AND car_selling_status IN ('SOLD', 'RETURNED', 'CONSIGNED', 'CONFIRMED')
+        AND car_selling_status IN ('SOLD', 'RETURNED', 'CONSIGNED', 'CONFIRMED')
       THEN 1 ELSE 0 END AS original_sold_confirmed
   , CASE WHEN CDT.car_handedover_to_buyer IS NOT NULL 
       AND car_selling_status IN ('SOLD', 'RETURNED', 'CONSIGNED') 
@@ -192,6 +196,18 @@ ON (SIN_DUPLICADOS.car_id = Inspections.car_id AND SIN_DUPLICADOS.inspection_dat
         'Anzures', 'Thiers'), 
         'Jinetes Arboledas', 'Arboledas'
     ) AS car_purchase_location
+  , CASE WHEN CHARINDEX('-', initial_valuation_price) <> 0 
+    THEN  0.5*(CAST(SUBSTRING([initial_valuation_price], 1, CHARINDEX('-',initial_valuation_price) - 1) AS float)) + 
+          0.5*(CAST(SUBSTRING([initial_valuation_price], CHARINDEX('-',initial_valuation_price) + 1, 
+          LEN(initial_valuation_price) - CHARINDEX('-',initial_valuation_price)) AS float))
+    ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(initial_valuation_price,
+          ' ', ''),
+          '$', ''),
+          ',', ''),
+          '.', ''),
+          'O', '0'),
+          '.00','')
+    END AS initial_valuation_price 
   FROM Cars
   LEFT JOIN CarsDates CDT
     ON Cars.car_id = CDT.car_id
@@ -215,22 +231,15 @@ ON (SIN_DUPLICADOS.car_id = Inspections.car_id AND SIN_DUPLICADOS.inspection_dat
   GROUP BY car_id
 )
 
+, LastChange AS (
+  SELECT car_id 
+  , Max(car_history_change_last_modified) AS updated_at
+  FROM CarChangesHistory
+  GROUP BY car_id
+)
 
 SELECT Cars.[car_id]
 --LIMPIEZA DE INITIAL VALUATION
-, CASE WHEN CHARINDEX('-', initial_valuation_price) <> 0 
-    THEN  0.5*(CAST(SUBSTRING([initial_valuation_price], 1, CHARINDEX('-',initial_valuation_price) - 1) AS float)) + 
-          0.5*(CAST(SUBSTRING([initial_valuation_price], CHARINDEX('-',initial_valuation_price) + 1, 
-          LEN(initial_valuation_price) - CHARINDEX('-',initial_valuation_price)) AS float))
-    ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-      initial_valuation_price,
-          ' '  , ''),
-          '$'  , ''),
-          ','  , ''),
-          '.00', ''),
-          '.'  , ''),
-          'O'  , '0')
-  END AS initial_valuation_price 
 , 'MX-' + CAST([internal_car_id] AS VARCHAR) as internal_car_id
 , CDT.car_purchased_date
 , [car_manufacturer_name]
@@ -268,7 +277,9 @@ SELECT Cars.[car_id]
 , [car_selling_status_last_modified]
 , [number_of_transits]
 , [car_purchase_price_car]   --, [car_purchase_price_car_usd]
+
 , Cars.car_purchase_price_total - Cars.car_purchase_price_car AS [car_purchase_price_other] --, [car_purchase_price_other_usd]
+, Cars.car_purchase_price_total - Cars.car_purchase_price_car AS otros_costos
 , [car_purchase_price_total] --, [car_purchase_price_total_usd]
 , TXL .car_purchase_taxless
 , TXL.car_purchase_price_car_taxless
@@ -279,7 +290,6 @@ SELECT Cars.[car_id]
 , [car_selling_price_car]
 , [car_selling_price_total]
 , [source_car_selling_price_total]
---, [initial_valuation_price_usd]
 -- , [seller_expected_price]    --, [seller_expected_price_usd] 
 --, [first_offer_price]        --, [first_offer_price_usd]
 --, [final_offer_price]        --, [final_offer_price_usd]
@@ -330,20 +340,22 @@ SELECT Cars.[car_id]
 --, [area_id]
 -- DE OTRAS TABLAS. 
 , TXL.client_subtype AS client_subtype
-, CALC.sold_delivered
+, CALC.sold_delivered 
 , CALC.original_sold_confirmed
 , CALC.sold_confirmed
 , CALC.was_purchased
 --, CALC.selling_days
 , CALC.inventory_days
 , CALC.inventory_isin
+, CALC.initial_valuation_price
 , AUC.auction_class
 , AUC.auction_last_date
 , ALW.car_allowance
 , b2b_deal
 , Cars.deleted_at
-, qc_score.inspection_qc_score
-, COALESCE(qc_score.inspector, 'Desconocido') inspector
+, QCS.inspection_qc_score
+, COALESCE(QCS.inspector, 'Desconocido') AS inspector
+, COALESCE(CHNG.updated_at, GETDATE()) AS updated_at
 FROM Cars
 LEFT JOIN [CarManufacturers] CMNF 
   ON Cars.car_manufacturer_id = CMNF.car_manufacturer_id
@@ -367,8 +379,11 @@ LEFT JOIN SalesChannel_Mod CHNL
   ON Cars.car_id = CHNL.car_id
 LEFT JOIN CarsConsigned CNSG
   ON Cars.car_id = CNSG.car_id
-LEFT JOIN SellingStatusLastChange
-  ON Cars.car_id = SellingStatusLastChange.car_id
-LEFT JOIN qc_score
-  ON Cars.car_id = qc_score.car_id
-WHERE Cars.deleted_at IS NULL
+LEFT JOIN SellingStatusLastChange STTCHN
+  ON Cars.car_id = STTCHN.car_id
+LEFT JOIN LastChange CHNG
+  ON Cars.car_id = CHNG.car_id
+LEFT JOIN QCScore QCS
+  ON Cars.car_id = QCS.car_id
+WHERE Cars.deleted_at IS NULL 
+  AND CHNG.updated_at >= :from_when 

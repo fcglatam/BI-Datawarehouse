@@ -30,7 +30,7 @@ from tools.base_alq import local_engine, reflect_engine
 
 #%% 1. Procedimiento digerido. 
 
-which_day = dt.today()  # - delta(1)
+which_day = dt.today() - delta(1)
 
 engine_ms = local_engine("mssql")
 meta_ms   = reflect_engine(engine_ms, update=False)

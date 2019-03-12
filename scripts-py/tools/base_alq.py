@@ -3,6 +3,9 @@ from os import path, pardir
 import sqlalchemy as alq
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.serializer import loads, dumps
+from sqlalchemy.dialects import postgresql as psql 
+from sqlalchemy.inspection import inspect
+
 from dotenv import load_dotenv 
 import pickle as pkl
 load_dotenv("../data/config/.env")
@@ -53,13 +56,28 @@ def reflect_engine(engine, update=True, store=None):
 
 
 
-def upload_sql(df, table, engine, schema="public", method=4): 
-  '''According to this blog: 
-  https://www.codementor.io/bruce3557/graceful-data-ingestion-with-sqlalchemy-and-pandas-pft7ddcy6
+def upsert_psql(df, table, engine, update_meta=True): 
   
-  4: Needs  connection/engine, MentorInformation, session
-  '''
-  pass
+  records = df.to_dict(orient='records')
+  metadata = reflect_engine(engine, update=update_meta)
+  table_obj = metadata.tables[table]
+  keys = [key.name for key in inspect(table_obj).primary_key]
+  
+  insert_stmt = psql.insert(table_obj).values(records)
+  update_dict = {c.name: c for c in insert_stmt.excluded}
+  on_conflict = insert_stmt.\
+    on_conflict_do_update(index_elements = keys, set_ = update_dict)
+  result = engine.execute(on_conflict)
+  return result
+  
+  
+  
+#  '''According to this blog: 
+#  https://www.codementor.io/bruce3557/graceful-data-ingestion-with-sqlalchemy-and-pandas-pft7ddcy6
+#  
+#  4: Needs  connection/engine, MentorInformation, session
+#  '''
+#  
   # if method == 1:
   #   df.to_sql(table, engine, schema, index=False)
 
@@ -87,14 +105,10 @@ def upload_sql(df, table, engine, schema="public", method=4):
   #   session.close()
 
   # elif method == 4: 
-    # Session = sessionmaker(bind=dest_db_con)
-    # session = Session()
-    # session.bulk_insert_mappings(MentorInformation, df.to_dict(orient="records"))
-    # session.close()
-
-
-
-
+#     Session = sessionmaker(bind=dest_db_con)
+#     session = Session()
+#     session.bulk_insert_mappings(MentorInformation, df.to_dict(orient="records"))
+#     session.close()
 
 
 

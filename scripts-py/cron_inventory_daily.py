@@ -17,8 +17,8 @@ if hasattr(main, "__file__"):
     exec(open(activate_this).read(), {'__file__': activate_this})
 else:
     this_dir = getcwd()
-    get_ipython().run_line_magic("load_ext", "autoreload")
-    get_ipython().run_line_magic("autoreload", "2")
+    get_ipython().run_line_magic('load_ext', 'autorealod')
+    get_ipython().run_line_magic('autoreload', '2')
 
 
 #%% Paquetes y configuración. 

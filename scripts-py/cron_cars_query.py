@@ -38,7 +38,7 @@ cars_df = ms.get_cars(engine_ms, this_dir, days_past=1)
 
 engine_pg = local_engine("postgresql")
 
-upsert_sql(cars_df, "x_dwh_cars", engine_pg, update_meta=False)
+upsert_psql(cars_df, "x_dwh_cars", engine_pg, update_meta=False)
 
 
 

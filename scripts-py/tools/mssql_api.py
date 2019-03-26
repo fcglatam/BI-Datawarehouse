@@ -96,18 +96,18 @@ def get_cars(engine, project_dir, days_past=0):
 def convert_inventory(inventory_in, for_day): 
   
   cols_compute = {
-    'inventory_date'  : lambda df: for_day.date(),
-    'car_id'          : lambda df: df.car_id,
-    'selling_status'  : lambda df: df.car_selling_status, 
-    'physical_status' : lambda df: df.car_physical_status, 
-    'legal_status'    : lambda df: df.car_legal_status,
-    'internal_id'     : lambda df: 'MX-' + df.internal_car_id.astype(str),
-    'vehicle_id'      : lambda df: df.car_vin.str.replace(' .*', ''), 
-    'car_location'    : lambda df: df.car_purchase_location, 
-    'car_name'        : lambda df: df.car_manufacturer_name.str.\
-        cat(sep=' - ', others = df.car_model_name.str.\
-        cat(sep=' - ', others = df.year_manufactured.astype(str))), 
-    'car_cost'        : lambda df: np.where(df.client_subtype == 'person', 
+    "inventory_date"  : lambda df: for_day.date(),
+    "car_id"          : lambda df: df.car_id,
+    "selling_status"  : lambda df: df.car_selling_status, 
+    "physical_status" : lambda df: df.car_physical_status, 
+    "legal_status"    : lambda df: df.car_legal_status,
+    "internal_id"     : lambda df: "MX-" + df.internal_car_id.astype(str),
+    "vehicle_id"      : lambda df: df.car_vin.str.replace(" .*", ""), 
+    "car_location"    : lambda df: df.car_current_location, 
+    "car_name"        : lambda df: df.car_manufacturer_name.str.\
+        cat(sep = " - ", others = df.car_model_name.str.\
+        cat(sep = " - ", others = df.year_manufactured.astype(str) ) ), 
+    "car_cost"        : lambda df: np.where(df.client_subtype == "person", 
         df.car_purchase_price_car, df.car_purchase_price_car/1.16),
     'allowance_cost'  : lambda df: df.allowance_sum.fillna(0),
     'total_cost'      : lambda df: np.where(df.client_subtype == 'person', 

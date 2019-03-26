@@ -113,8 +113,10 @@ def convert_inventory(inventory_in, for_day):
     'total_cost'      : lambda df: np.where(df.client_subtype == 'person', 
         df.car_purchase_price_total, df.car_purchase_price_total) ,
     'incoming_date'   : lambda df: df.car_handedover_from_seller.dt.date, 
-    'inventory_days'  : lambda df: (for_day - df.car_handedover_from_seller).dt.days,
-    'status_days'     : lambda df: (for_day - df.car_handedover_from_seller).dt.days, 
+    'inventory_days'  : lambda df: 
+        (for_day - df.car_handedover_from_seller).dt.days,
+    'status_days'     : lambda df: 
+        (for_day - df.car_handedover_from_seller).dt.days, 
     'created_at'      : lambda df: dt.now(),
     'updated_at'      : lambda df: dt.now(),
     }
@@ -125,9 +127,10 @@ def convert_inventory(inventory_in, for_day):
 
 
   
-def get_some_cars(engine, metadata): 
+def get_some_cars(engine): 
   # Toy Example. 
   session = begin_session(engine)  
+  netadata = reglect_engine(engine)
 
   Cars  = metadata.tables['Cars']
   Makes = metadata.tables['CarManufacturers']

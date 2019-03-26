@@ -25,7 +25,7 @@ else:
 
 from tools import mssql_api as ms
 from datetime import datetime as dt, timedelta as delta
-from tools.base_alq import local_engine, reflect_engine
+from tools.base_alq import local_engine
 
 
 #%% 1. Procedimiento digerido. 
@@ -33,9 +33,8 @@ from tools.base_alq import local_engine, reflect_engine
 which_day = dt.today() - delta(1)
 
 engine_ms = local_engine("mssql")
-meta_ms   = reflect_engine(engine_ms, update=False)
 
-inventory_ms = ms.get_inventory(engine_ms, meta_ms)
+inventory_ms = ms.get_inventory(engine_ms)
 inventory_pg = ms.convert_inventory(inventory_ms, for_day=which_day)
 
 engine_pg = local_engine("postgresql")

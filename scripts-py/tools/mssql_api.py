@@ -1,7 +1,8 @@
+from os import path, pardir
 import pandas as pd, numpy as np
 import sqlalchemy as alq
 from sqlalchemy.dialects import mssql
-from datetime import datetime as dt 
+from datetime import datetime as dt, timedelta as delta
 from tools.base_alq import begin_session
 
 # from tools.models_alq import (Cars, Makes, Models, Allowances, 
@@ -12,8 +13,9 @@ from tools.base_alq import begin_session
 
 
  
-def get_inventory(engine, metadata): 
-  session = begin_session(engine)  
+def get_inventory(engine, update_meta): 
+  session  = begin_session(engine)  
+  metadata = reflect_engine(engine, update=update_meta)
 
   Cars   = metadata.tables['Cars']
   Makes  = metadata.tables['CarManufacturers']
@@ -65,6 +67,32 @@ def get_inventory(engine, metadata):
   
 
 
+def get_cars(engine, project_dir, days_past=0): 
+  if days_past: 
+    changes_from = dt.today() - delta(days_past)
+  else:
+    changes_from = dt(2017, 1, 1, 0, 0)
+    
+  cars_file = path.join(project_dir, pardir, 
+      'sql-queries', 'queries-repo', 'Tables', 'std_Cars.sql')
+  with open(cars_file, encoding='utf-8-sig') as opened:
+    the_script = opened.read() 
+    
+  date_cols = ["car_purchased_date", "car_handedover_from_seller",
+     "car_handedover_to_buyer", "reserved_at_date", "original_reserved_at_date",
+     "car_created", "invoice_date", "car_sold_date", 
+     "latest_outgoing_payment_date", "latest_incoming_payment_date", 
+     "auction_last_date", "deleted_at", "updated_at"]
+  
+  
+  the_query = alq.text(the_script).bindparams(from_when=changes_from)    
+  the_cars = pd.read_sql(the_query, engine, parse_dates=date_cols).\
+    replace({col : {np.nan:None} for col in date_cols})
+  
+  return the_cars
+
+
+
 def convert_inventory(inventory_in, for_day): 
   
   cols_compute = {
@@ -96,18 +124,7 @@ def convert_inventory(inventory_in, for_day):
   return inventory_out
 
 
-    
-    
-
-#def get_cars(engine, metadata): 
-#  session = begin_session(engine)  
-#
-#  return the_cars
-
   
-
-
-
 def get_some_cars(engine, metadata): 
   # Toy Example. 
   session = begin_session(engine)  
@@ -127,7 +144,7 @@ def get_some_cars(engine, metadata):
       'physical' : ['ATOURLOCATION'] }
   
   inventory_conditions = alq.and_( 
-      Cars.c.purchase_channel == "Inspection", 
+      Cars.c.purchase_channel == 'Inspection', 
       Cars.c.car_selling_status.in_( statuses['selling' ]),
       Cars.c.car_physical_status.in_(statuses['physical']),)
 
@@ -138,3 +155,5 @@ def get_some_cars(engine, metadata):
 
   the_inventory = pd.read_sql(the_query, engine)
   return the_inventory
+
+

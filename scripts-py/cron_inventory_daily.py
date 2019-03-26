@@ -30,7 +30,7 @@ from tools.base_alq import local_engine, reflect_engine
 
 #%% 1. Procedimiento digerido. 
 
-which_day = dt.today() # - delta(1)
+which_day = dt.today() - delta(1)
 
 engine_ms = local_engine("mssql")
 meta_ms   = reflect_engine(engine_ms, update=False)
@@ -41,20 +41,6 @@ inventory_pg = ms.convert_inventory(inventory_ms, for_day=which_day)
 engine_pg = local_engine("postgresql")
 inventory_pg.to_sql("cars_inventory", con=engine_pg, 
     schema="public", if_exists="append", index=False)
-
-
-
-
-
-
-7
-
-
-
-
-
-
-
 
 
 

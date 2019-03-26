@@ -29,17 +29,16 @@ else:
 #%% Paquetes y configuración. 
 
 from tools import mssql_api as ms
-from datetime import datetime as dt, timedelta as delta
-from tools.base_alq import local_engine, reflect_engine
+from tools.base_alq import local_engine, upsert_psql
 
 
 engine_ms = local_engine("mssql")
-meta_ms   = reflect_engine(engine_ms, update=False)
 
+cars_df = ms.get_cars(engine_ms, this_dir, days_past=1)
 
+engine_pg = local_engine("postgresql")
 
-
-
+upsert_psql(cars_df, "x_dwh_cars", engine_pg, update_meta=False)
 
 
 

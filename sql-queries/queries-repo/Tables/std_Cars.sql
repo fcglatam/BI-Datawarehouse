@@ -224,7 +224,7 @@ SELECT Cars.car_id
 
 , SellingStatusLastChange AS (
   SELECT car_id
-  , MAX(car_history_change_created) car_selling_status_last_modified
+  , MAX(car_history_change_created) AS car_selling_status_last_modified
   FROM CarChangesHistory 
   WHERE car_history_change_type = 'status' 
     AND car_history_change_value IN (SELECT DISTINCT car_selling_status FROM Cars)
@@ -233,7 +233,7 @@ SELECT Cars.car_id
 
 , LastChange AS (
   SELECT car_id 
-  , Max(car_history_change_last_modified) AS updated_at
+  , MAX(car_history_change_last_modified) AS updated_at
   FROM CarChangesHistory
   GROUP BY car_id
 )

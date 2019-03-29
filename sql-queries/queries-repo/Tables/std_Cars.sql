@@ -235,10 +235,19 @@ SELECT Cars.car_id
 )
 
 , LastChange AS (
-  SELECT car_id 
-  , MAX(car_history_change_last_modified) AS updated_at
-  FROM CarChangesHistory
-  GROUP BY car_id
+  SELECT Cars.car_id, (SELECT MAX(a_date) FROM (VALUES 
+      (Cars.car_last_modified), 
+      (DLR.dealer_last_modified),
+      (ALW.allowance_last_modified),
+      (AUC.auction_last_modified)
+  ) AS VALUE(a_date)) AS updated_at
+  FROM Cars 
+  LEFT JOIN Dealers DLR
+    ON Cars.sold_to_id = DLR.dealer_id 
+  LEFT JOIN CarAllowances_Grp ALW
+    ON Cars.car_id = ALW.car_id
+  LEFT JOIN LastWinnerAuction AUC
+    ON Cars.car_id = AUC.car_id
 )
 
 SELECT Cars.[car_id]
@@ -356,12 +365,7 @@ SELECT Cars.[car_id]
 , Cars.deleted_at
 , QCS.inspection_qc_score
 , COALESCE(QCS.inspector, 'Desconocido') AS inspector
-, (SELECT MAX(a_date) FROM (VALUES 
-      (Cars.car_last_modified), 
-      (DLR.dealer_last_modified),
-      (ALW.allowance_last_modified),
-      (AUC.auction_last_modified)
-  ) AS VALUE(a_date) ) AS updated_at
+, CHNG.updated_at
 FROM Cars
 LEFT JOIN [CarManufacturers] CMNF 
   ON Cars.car_manufacturer_id = CMNF.car_manufacturer_id
@@ -387,6 +391,8 @@ LEFT JOIN CarsConsigned CNSG
   ON Cars.car_id = CNSG.car_id
 LEFT JOIN SellingStatusLastChange STTCHN
   ON Cars.car_id = STTCHN.car_id
+LEFT JOIN LastChange CHNG
+  ON Cars.car_id = CHNG.car_id
 LEFT JOIN QCScore QCS
   ON Cars.car_id = QCS.car_id
 WHERE Cars.deleted_at IS NULL 

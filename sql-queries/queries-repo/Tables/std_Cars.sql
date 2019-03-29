@@ -351,7 +351,7 @@ SELECT Cars.[car_id]
 , CALC.initial_valuation_price
 , AUC.auction_class
 , AUC.auction_last_date
-, ALW.car_allowance
+, COALESCE(ALW.car_allowance, 0) AS car_allowance
 , b2b_deal
 , Cars.deleted_at
 , QCS.inspection_qc_score

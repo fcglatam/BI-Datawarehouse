@@ -356,8 +356,7 @@ SELECT Cars.[car_id]
 , Cars.deleted_at
 , QCS.inspection_qc_score
 , COALESCE(QCS.inspector, 'Desconocido') AS inspector
-, ( SELECT MAX(a_date) 
-    FROM (VALUES 
+, (SELECT MAX(a_date) FROM (VALUES 
       (Cars.car_last_modified), 
       (DLR.dealer_last_modified),
       (ALW.allowance_last_modified),

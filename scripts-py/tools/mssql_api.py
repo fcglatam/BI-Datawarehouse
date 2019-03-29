@@ -84,7 +84,6 @@ def get_cars(engine, project_dir, days_past=0):
      "latest_outgoing_payment_date", "latest_incoming_payment_date", 
      "auction_last_date", "deleted_at", "updated_at"]
   
-  
   the_query = alq.text(the_script).bindparams(from_when=changes_from)    
   the_cars = pd.read_sql(the_query, engine, parse_dates=date_cols).\
     replace({col : {np.nan:None} for col in date_cols})

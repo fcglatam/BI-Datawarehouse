@@ -80,7 +80,7 @@ def get_cars(engine, project_dir, days_past=0):
     
   date_cols = ["car_purchased_date", "car_handedover_from_seller",
      "car_handedover_to_buyer", "reserved_at_date", "original_reserved_at_date",
-     "car_created", "invoice_date", "car_sold_date", 
+     "car_created", "car_selling_status_last_modified", "invoice_date", "car_sold_date", 
      "latest_outgoing_payment_date", "latest_incoming_payment_date", 
      "auction_last_date", "deleted_at", "updated_at"]
   

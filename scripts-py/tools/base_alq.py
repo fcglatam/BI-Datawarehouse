@@ -57,12 +57,12 @@ def reflect_engine(engine, update=True, store=None):
 
 
 def upsert_psql(df, table, engine, update_meta=True): 
-  
-  records = df.to_dict(orient='records')
   metadata = reflect_engine(engine, update=update_meta)
+  
   table_obj = metadata.tables[table]
   keys = [key.name for key in inspect(table_obj).primary_key]
   
+  records = df.to_dict(orient='records')
   insert_stmt = psql.insert(table_obj).values(records)
   update_dict = {c.name: c for c in insert_stmt.excluded}
   on_conflict = insert_stmt.\

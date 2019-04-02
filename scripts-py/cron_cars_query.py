@@ -34,11 +34,11 @@ from tools.base_alq import local_engine, upsert_psql
 
 engine_ms = local_engine("mssql")
 
-cars_df = ms.get_cars(engine_ms, this_dir, days_past=60)
+cars_df = ms.get_cars(engine_ms, this_dir, days_past=30)
 
 engine_pg = local_engine("postgresql")
 
-upsert_psql(cars_df, "dwh_cars", engine_pg, update_meta=False)
+upsert_psql(cars_df, "dwh_cars", engine_pg, update_meta=True)
 
 
 

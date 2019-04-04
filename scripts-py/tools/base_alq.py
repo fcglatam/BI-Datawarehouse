@@ -30,7 +30,7 @@ def local_engine(which_base):
           user = os.getenv("PG_USER"), 
           pswd = os.getenv("PG_PASS"), 
           host = os.getenv("PG_HOST"), 
-          name = os.getenv("PG_NAME") ))  
+          name = os.getenv("PG_NAME")))  
   engine.logging_name = which_base
   return engine
 

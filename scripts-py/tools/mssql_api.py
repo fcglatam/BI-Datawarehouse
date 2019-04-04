@@ -3,7 +3,7 @@ import pandas as pd, numpy as np
 import sqlalchemy as alq
 from sqlalchemy.dialects import mssql
 from datetime import datetime as dt, timedelta as delta
-from tools.base_alq import begin_session
+from tools.base_alq import begin_session, reflect_engine
 
 # from tools.models_alq import (Cars, Makes, Models, Allowances, 
 #   Auctions, Inspections, Changes, Dealers)
@@ -15,7 +15,7 @@ from tools.base_alq import begin_session
  
 def get_inventory(engine, update_meta): 
   session  = begin_session(engine)  
-  metadata = reflect_engine(engine, update=update_meta)
+  metadata = reflect_engine(engine, update=True)
 
   Cars   = metadata.tables['Cars']
   Makes  = metadata.tables['CarManufacturers']
@@ -129,7 +129,7 @@ def convert_inventory(inventory_in, for_day):
 def get_some_cars(engine): 
   # Toy Example. 
   session = begin_session(engine)  
-  netadata = reglect_engine(engine)
+  metadata = reflect_engine(engine)
 
   Cars  = metadata.tables['Cars']
   Makes = metadata.tables['CarManufacturers']

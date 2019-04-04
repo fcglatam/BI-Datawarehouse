@@ -17,7 +17,7 @@ if hasattr(main, "__file__"):
     exec(open(activate_this).read(), {'__file__': activate_this})
 else:
     this_dir = getcwd()
-    get_ipython().run_line_magic('load_ext', 'autorealod')
+    get_ipython().run_line_magic('load_ext', 'autoreload')
     get_ipython().run_line_magic('autoreload', '2')
 
 
@@ -34,7 +34,7 @@ which_day = dt.today() - delta(1)
 
 engine_ms = local_engine("mssql")
 
-inventory_ms = ms.get_inventory(engine_ms)
+inventory_ms = ms.get_inventory(engine_ms, update_meta = True)
 inventory_pg = ms.convert_inventory(inventory_ms, for_day=which_day)
 
 engine_pg = local_engine("postgresql")

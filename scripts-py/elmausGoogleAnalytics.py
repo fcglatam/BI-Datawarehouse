@@ -10,8 +10,8 @@ class ganalytics_service:
                  scopes = 'https://www.googleapis.com/auth/analytics.readonly',
                  discovery_uri = ('https://analyticsreporting.googleapis.com/$discovery/rest'),
                 #Dirección de credenciales
-                credentials_dir =  r'\Ganalytics_token.json',
-                 client_secret_dir = r'\GoogleAPIsCredentials.json'):
+                credentials_dir =  'Ganalytics_token.json',
+                 client_secret_dir = 'GoogleAPIsCredentials.json'):
         self.scopes = scopes
         self.discovery_uri = discovery_uri
         self.credentials_dir = credentials_dir

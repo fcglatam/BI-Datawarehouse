@@ -5,3 +5,4 @@ _token.json
 .spyproject
 dv_1_inventory_versiones_nosirve.py
 eg_*
+*.json

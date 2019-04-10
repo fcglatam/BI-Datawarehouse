@@ -34,7 +34,7 @@ which_day = dt.today() - delta(1)
 
 engine_ms = local_engine("mssql")
 
-inventory_ms = ms.get_inventory(engine_ms, update_meta=False)
+inventory_ms = ms.get_inventory(engine_ms, update_meta=True)
 inventory_pg = ms.convert_inventory(inventory_ms, for_day=which_day)
 
 engine_pg = local_engine("postgresql")

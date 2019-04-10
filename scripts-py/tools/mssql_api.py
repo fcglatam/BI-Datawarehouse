@@ -11,7 +11,7 @@ from tools.base_alq import begin_session, reflect_engine
  
 def get_inventory(engine, update_meta): 
   session  = begin_session(engine)  
-  metadata = reflect_engine(engine, update=update_meta)
+  metadata = reflect_engine(engine, update=True)
 
   Cars   = metadata.tables['Cars']
   Makes  = metadata.tables['CarManufacturers']
@@ -124,7 +124,11 @@ def convert_inventory(inventory_in, for_day):
   
 def get_some_cars(engine): 
   # Toy Example. 
+<<<<<<< HEAD
   session  = begin_session(engine)  
+=======
+  session = begin_session(engine)  
+>>>>>>> 8c66207d859e8bb6ad3af796930d7835f127c6b1
   metadata = reflect_engine(engine)
 
   Cars  = metadata.tables['Cars']

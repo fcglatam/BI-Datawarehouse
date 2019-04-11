@@ -14,6 +14,6 @@ This folder contains credentials and configurations:
 - postgres-ssl-server.pem
 - requirements.txt
 
-The models folder has cached data for sqlalchemy tables.
 
+The models folder has cached data for sqlalchemy tables.
 Configuration files have been used at different stages of development, but not all are needed in this latest stage.  

@@ -89,6 +89,7 @@ def ganalyticsTable(metriclist, dimensionlist, end_date, init_date):
     
     #Respuesta de analytics  
     response = analytics.reports().batchGet(body = body).execute()  
+    
     #Parsear la respuesta a un dataframe
     df = pd.DataFrame()
     for rows in response['reports'][0]['data']['rows']:

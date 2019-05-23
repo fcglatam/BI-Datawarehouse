@@ -1,5 +1,5 @@
 ﻿WITH
--- Unir el QC score con car_id y nombre de inspectio
+-- Unir el QC score con car_id y nombre de inspector
 QCScore AS (
 SELECT MXDT.car_id
 , OG_ID.inspection_qc_score
@@ -13,10 +13,13 @@ SELECT MXDT.car_id
         CHARINDEX('.', inspector) + 2, 
         CHARINDEX('@', inspector) - CHARINDEX('.',inspector) - 2) END AS inspector
 FROM Inspections INSP
+-- Group by para quitar inspecciones repetidas
 LEFT JOIN (SELECT original_inspection_id
-  , inspection_qc_score
-  FROM Inspections) OG_ID
+  , MAX(inspection_qc_score) AS inspection_qc_score
+  FROM Inspections
+  GROUP BY original_inspection_id) OG_ID
   ON INSP.inspection_id = OG_ID.original_inspection_id
+  -- Para quedarse solo con un car_id porque en inspections se quedan repetidos
 LEFT JOIN (
       SELECT car_id
       , MAX(inspection_date) AS inspection_date 
@@ -102,7 +105,7 @@ SELECT Cars.car_id
       THEN (car_selling_price_car +  -- MIN(car_purchase_price_car, car_selling_price_car)
           0.16*(CASE WHEN car_purchase_price_car <= car_selling_price_car
           THEN car_purchase_price_car ELSE car_selling_price_car END))/1.16
-      WHEN SUB.[client_subtype] IS NOT NULL THEN car_selling_price_car/1.16
+      WHEN (SUB.[client_subtype] IS NOT NULL AND SUB.client_subtype != '') THEN car_selling_price_car/1.16
       ELSE NULL END AS car_selling_price_car_taxless
   FROM Cars
   LEFT JOIN CarsSources_1 SUB
@@ -114,7 +117,7 @@ SELECT Cars.car_id
   , TXL.client_subtype
   , TXL.car_purchase_price_car_taxless
   , TXL.car_purchase_price_car_taxless AS car_purchase_taxless
-  , TXL.car_purchase_price_car_taxless + Cars.car_purchase_price_total - Cars.car_purchase_price_car
+  , (Cars.car_purchase_price_total - Cars.car_purchase_price_car + TXL.car_purchase_price_car_taxless)
         AS car_purchase_price_total_taxless
   , TXL.car_selling_price_car_taxless
   , TXL.car_selling_price_car_taxless AS car_selling_taxless
@@ -176,42 +179,19 @@ SELECT Cars.car_id
         COALESCE( CDT.car_handedover_to_buyer, GETDATE()) ) AS inventory_days
   -- , CASE WHEN (car_id IN (SELECT yardsale_car_id FROM Yardsales)) 
   --   THEN 1 ELSE 0 END AS is_yardsale
-  , REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-    REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
-      car_purchase_location, 
-          'IP -', 'IP '), 
-          'IP  ' , 'IP '), 
-          'IP ', ''), 
-        '5 de Mayo', 'Toluca'), 
-        'Americas Santa Tere', 'Américas Santa Tere'), 
-        'Puebla', 'La Noria'), 
-        'Ecatepec Gran Plaza', 'Ecatepec Grand Plaza'), 
-        'Insurgentes Sur', 'Insurgentes'), 
-        'Insurgentes', 'Insurgentes Sur'), 
-        'Chedraui Ajusco', 'Ajusco'), 
-        'Ajusco', 'Chedraui Ajusco'), 'Tonala', 'Tonalá'), 
-        'Santa Monica', 'Santa Mónica'), 
-        'Santa Fé', 'Santa Fe'), 
-        'Leon', 'León'), 
-        'Armas', 'Azcapotzalco'), 
-        'Cuna del Futbol', 'Pachuca'), 
-        'Aguilas', 'Las Águilas'), 
-        'Anzures', 'Thiers'), 
-        'Jinetes Arboledas', 'Arboledas'
-    ) AS car_purchase_location
-  , CASE WHEN CHARINDEX('-', initial_valuation_price) <> 0 
-    THEN  0.5*(CAST(SUBSTRING([initial_valuation_price], 1, CHARINDEX('-',initial_valuation_price) - 1) AS float)) + 
-          0.5*(CAST(SUBSTRING([initial_valuation_price], CHARINDEX('-',initial_valuation_price) + 1, 
-          LEN(initial_valuation_price) - CHARINDEX('-',initial_valuation_price)) AS float))
-    ELSE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(initial_valuation_price,
-          ' ', ''),
-          '$', ''),
-          ',', ''),
-          '.', ''),
-          'O', '0'),
-          '.00','')
-    END AS initial_valuation_price 
+, CASE WHEN car_purchase_location = 'Condesa' AND booking_appointment_date < '2019-5-21' THEN 'Benjamin Frankiln'
+WHEN car_purchase_location = 'Juan Escutia' THEN 'Condesa' ELSE car_purchase_location END AS car_purchase_location
+, price as initial_valuation_price
   FROM Cars
+  -- Para quedarse solo con un car_id porque en inspections se quedan repetidos
+LEFT JOIN (
+      SELECT car_id, max(inspection_booking_code) as inspection_booking_code
+      , MAX(inspection_date) AS inspection_date 
+      FROM Inspections 
+      WHERE car_id IS NOT NULL 
+      GROUP BY car_id) MXDT ON Cars.car_id = MXDT.car_id
+  LEFT JOIN bookings ON external_id = MXDT.inspection_booking_code
+  LEFT JOIN leads ON leads.lead_id = bookings.lead_id
   LEFT JOIN CarsDates CDT
     ON Cars.car_id = CDT.car_id
 )
@@ -395,5 +375,5 @@ LEFT JOIN LastChange CHNG
   ON Cars.car_id = CHNG.car_id
 LEFT JOIN QCScore QCS
   ON Cars.car_id = QCS.car_id
-WHERE Cars.deleted_at IS NULL 
-  AND updated_at >= :from_when
+WHERE Cars.deleted_at IS NULL
+  AND updated_at >= :from_when -- '2019-01-01' --

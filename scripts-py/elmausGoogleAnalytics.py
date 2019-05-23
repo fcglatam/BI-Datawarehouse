@@ -19,6 +19,7 @@ def ganalytics_service(api_name, version, client_secret, credentials):
 		creds = tools.run_flow(flow, store, flags)
 		
 	return build(api_name, version, http = creds.authorize(Http()))
+
   
 def ganalyticsTable(service, metriclist, dimensionlist, end_date, init_date, row_size = 1000):
 	import pandas as pd

@@ -1,5 +1,5 @@
 CREATE TABLE pricing_cars (
-
+  
 );
 
 

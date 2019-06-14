@@ -34,7 +34,7 @@ from tools.base_alq import local_engine, upsert_psql
 
 engine_ms = local_engine("mssql")
 
-cars_df = ms.get_cars(engine_ms, this_dir, days_past=30)
+cars_df = ms.get_cars(engine_ms, this_dir, days_past=10)
 
 engine_pg = local_engine("postgresql")
 

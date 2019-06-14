@@ -1,6 +1,5 @@
 from os import path, getenv
 import pandas as pd
-from __future__ import print_function
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -110,7 +109,7 @@ def ganalyticsTable(metriclist, dimensionlist, end_date, init_date):
     return df
 
 
-## Código repetido debido a desacuerdos del equipo. 
+## Código repetido debido a integración del equipo
 
 SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly', 
           'https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -160,22 +159,12 @@ def drive_archivos_en_carpeta(servicio, carpeta):
 
 def sheets_leer_inventario(servicio, sheet_id, tag_fecha): 
     currency_str = lambda str_series: pd.to_numeric(str_series.str.replace("[$,]", ""))
-
-    # cols_types = [
-    #     ("inventory_date", "datetime64"),  ("car_id", object), 
-    #     ("selling_status", object), ("physical_status", object), 
-    #     ("legal_status",   object), ("internal_id", object),  ("vehicle_id", object),
-    #     ("car_location",   object), ("car_name",    object),  ("car_cost", float), 
-    #     ("allowance_cost", float),  ("total_cost",  float), 
-    #     ("incoming_date", "datetime64"), ("inventory_days", float),
-    #     ("status_days", float), ("created_at", "datetime64"), 
-    #     ("updated_at", "datetime64") ]
     
     cols_assign = {
         "inventory_date"    : lambda df: tag_fecha,
         "car_id"            : lambda df: df["ID"], 
         "selling_status"    : lambda df: df["Estatus de venta"].str.extract(" - (.*)"),
-        "physical_status"   : lambda df: df["Estatus fisico"],
+        "physical_status"   : lambda df: df["Estatus físico"],
         "legal_status"      : lambda df: df["Estatus legal"],
         "internal_id"       : lambda df: df["ID"],
         "vehicle_id"        : lambda df: df["NIV"],
@@ -186,7 +175,8 @@ def sheets_leer_inventario(servicio, sheet_id, tag_fecha):
         "car_cost"          : lambda df: currency_str(df["Precio sin IVA"]),
         "allowance_cost"    : lambda df: currency_str(df["Allowance"]).fillna(0),
         "total_cost"        : lambda df: df.car_cost,
-        "incoming_date"     : lambda df: df["Fecha de ingreso"],
+        "incoming_date"     : lambda df: df["Fecha de ingreso"].\
+            replace("", df["Fecha de compra"]),
         "inventory_days"    : lambda df: df["Dias en inventario"].fillna(0),
         "status_days"       : lambda df: df["Dias desde cambio de status"].fillna(0),
         "created_at"        : lambda df: pd.Timestamp.now(),

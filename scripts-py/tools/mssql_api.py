@@ -7,6 +7,29 @@ from tools.base_alq import begin_session, reflect_engine
 
  
 
+def get_cars(engine, project_dir, days_past=0): 
+  if days_past: 
+    changes_from = dt.today() - delta(days_past)
+  else:
+    changes_from = dt(2017, 1, 1, 0, 0)
+    
+  cars_file = path.join(project_dir, pardir, 
+      'sql-queries', 'queries-repo', 'Tables', 'std_Cars.sql')
+  with open(cars_file, encoding='utf-8-sig') as opened:
+    the_script = opened.read() 
+    
+  date_cols = ["car_purchased_date", "car_handedover_from_seller",
+     "car_handedover_to_buyer", "reserved_at_date", "original_reserved_at_date",
+     "car_created", "car_selling_status_last_modified", "invoice_date", "car_sold_date", 
+     "latest_outgoing_payment_date", "latest_incoming_payment_date", 
+     "auction_last_date", "deleted_at", "updated_at"]
+  
+  the_query = alq.text(the_script).bindparams(from_when=changes_from)    
+  the_cars = pd.read_sql(the_query, engine, parse_dates=date_cols).\
+    replace({col : {np.nan:None} for col in date_cols})
+  
+  return the_cars
+
 
  
 def get_inventory(engine, update_meta): 
@@ -63,30 +86,6 @@ def get_inventory(engine, update_meta):
   
 
 
-def get_cars(engine, project_dir, days_past=0): 
-  if days_past: 
-    changes_from = dt.today() - delta(days_past)
-  else:
-    changes_from = dt(2017, 1, 1, 0, 0)
-    
-  cars_file = path.join(project_dir, pardir, 
-      'sql-queries', 'queries-repo', 'Tables', 'std_Cars.sql')
-  with open(cars_file, encoding='utf-8-sig') as opened:
-    the_script = opened.read() 
-    
-  date_cols = ["car_purchased_date", "car_handedover_from_seller",
-     "car_handedover_to_buyer", "reserved_at_date", "original_reserved_at_date",
-     "car_created", "car_selling_status_last_modified", "invoice_date", "car_sold_date", 
-     "latest_outgoing_payment_date", "latest_incoming_payment_date", 
-     "auction_last_date", "deleted_at", "updated_at"]
-  
-  the_query = alq.text(the_script).bindparams(from_when=changes_from)    
-  the_cars = pd.read_sql(the_query, engine, parse_dates=date_cols).\
-    replace({col : {np.nan:None} for col in date_cols})
-  
-  return the_cars
-
-
 
 def convert_inventory(inventory_in, for_day): 
   
@@ -107,7 +106,8 @@ def convert_inventory(inventory_in, for_day):
     'allowance_cost'  : lambda df: df.allowance_sum.fillna(0),
     'total_cost'      : lambda df: np.where(df.client_subtype == 'person', 
         df.car_purchase_price_total, df.car_purchase_price_total) ,
-    'incoming_date'   : lambda df: df.car_handedover_from_seller.dt.date, 
+    'incoming_date'   : lambda df: df.car_handedover_from_seller.dt.date.\
+        replace(np.nan, None), 
     'inventory_days'  : lambda df: 
         (for_day - df.car_handedover_from_seller).dt.days,
     'status_days'     : lambda df: 
@@ -122,36 +122,3 @@ def convert_inventory(inventory_in, for_day):
 
 
   
-def get_some_cars(engine): 
-  # Toy Example. 
-  session = begin_session(engine)  
-  metadata = reflect_engine(engine)
-
-  Cars  = metadata.tables['Cars']
-  Makes = metadata.tables['CarManufacturers']
-  
-  cars_cols = [ getattr(Cars.c, cada_una) for cada_una in [
-      'car_id',                   
-      'car_selling_status',       
-      'car_purchased_date', 
-      'car_purchase_price_car']] + [
-      Makes.c.car_manufacturer_name]
-  
-  statuses = {
-      'selling'  : ['AVAILABLE','RESERVED'], 
-      'physical' : ['ATOURLOCATION'] }
-  
-  inventory_conditions = alq.and_( 
-      Cars.c.purchase_channel == 'Inspection', 
-      Cars.c.car_selling_status.in_( statuses['selling' ]),
-      Cars.c.car_physical_status.in_(statuses['physical']),)
-
-  the_query = ( session.query(*cars_cols).
-      join(Makes, Cars.c.car_manufacturer_id == Makes.c.car_manufacturer_id).
-      filter(inventory_conditions).
-      statement )
-
-  the_inventory = pd.read_sql(the_query, engine)
-  return the_inventory
-
-
